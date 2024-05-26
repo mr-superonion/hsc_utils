@@ -1,6 +1,6 @@
 # utils_shear_ana
 
-Some useful utilities for shear analysis
+Some useful utilities for HSC year3 cosmic shear analysis
 
 ## Installation
 
@@ -8,6 +8,6 @@ Some useful utilities for shear analysis
 ```shell
 mamba install healpy treecorr cosmosis seaborn -c conda-forge
 git clone https://github.com/mr-superonion/utils_shear_ana.git
-pip install -e . --user
+pip install .
 ```
 
