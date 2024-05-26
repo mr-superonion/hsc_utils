@@ -272,156 +272,6 @@ def make_figure_axes(ny=1, nx=1, square=True):
     return fig, axes
 
 
-def make_cosebis_ploddt(nmodes):
-    """
-
-    Args:
-        nmodes (int):   number of cosebis modes
-    """
-    nzs = 4
-    axes = {}
-    fig = plt.figure(figsize=(10, 10))
-
-    label1 = r"$E_n [\times 10^{10}]$"
-    label2 = r"$B_n [\times 10^{10}]$"
-    ll1 = r"$E_n$"
-    ll2 = r"$B_n$"
-
-    for i in range(nzs):
-        for j in range(i, nzs):
-            # -----emode
-            ax = plt.subplot2grid(
-                (10, 10), ((4 - i) * 2, (3 - j) * 2), colspan=2, rowspan=2, fig=fig
-            )
-            ax.set_title(
-                r"$%d \times %d$" % (i + 1, j + 1), fontsize=15, y=1.0, pad=-15, x=0.8
-            )
-            ax.grid()
-
-            # x-axis
-            ax.set_xlim(0.2, nmodes + 0.8)
-            rr = np.arange(1, nmodes + 0.8, 1)
-            if i != 0:
-                ax.set_xticks(rr)
-                ax.set_xticklabels([""] * len(rr))
-            else:
-                ax.set_xticks(rr)
-            if i == 0 and j == 1:
-                ax.set_xlabel(r"$n$")
-            del rr
-
-            # y-axis
-            ax.set_ylim(-5.5 - i * 2, i * 10 + 6.5)
-            rr = np.arange(int(-4.5 - i * 2), i * 10 + 5.5, 4 + i * 2)
-            if j != nzs - 1:
-                ax.set_yticks(rr)
-                ax.set_yticklabels([""] * len(rr))
-            else:
-                ax.set_yticks(rr)
-            if j == nzs - 1 and i == 2:
-                ax.set_ylabel(label1)
-            axes.update({"%d%d_e" % (i + 1, j + 1): ax})
-            del rr
-
-            # -----bmode
-            ax = plt.subplot2grid(
-                (10, 10), (i * 2, (j + 1) * 2), colspan=2, rowspan=2, fig=fig
-            )
-            ax.yaxis.set_label_position("right")
-            ax.yaxis.tick_right()
-            ax.set_title(
-                r"$%d \times %d$" % (i + 1, j + 1), fontsize=15, y=1.0, pad=-15, x=0.8
-            )
-            ax.grid()
-
-            # x-axis
-            ax.set_xlim(0.2, nmodes + 0.8)
-            rr = np.arange(1, nmodes + 0.8, 1)
-            if i != j:
-                ax.set_xticks(rr)
-                ax.set_xticklabels([""] * len(rr))
-            else:
-                ax.set_xticks(rr)
-
-            # y-axis
-            ax.set_ylim(-4.5, 4.5)
-            rr = np.arange(-4, 4.5, 2)
-            if j != nzs - 1:
-                ax.set_yticks(rr)
-                ax.set_yticklabels([""] * len(rr))
-            else:
-                ax.set_yticks(rr)
-            if i == 2 and j == 3:
-                ax.set_ylabel(label2)
-            axes.update({"%d%d_b" % (i + 1, j + 1): ax})
-
-    ax = plt.subplot2grid((10, 10), (1 * 2, 1 * 2), colspan=2, rowspan=2, fig=fig)
-    ax.set_axis_off()
-    leg1 = mlines.Line2D([], [], color=colors[0], marker="+", label=ll1, lw=0)
-    leg2 = mlines.Line2D([], [], color=colors[0], marker=".", label=ll2, lw=0)
-    ax.legend(handles=[leg1, leg2], loc="lower right", fontsize=20, markerscale=2.0)
-
-    ax = plt.subplot2grid((10, 10), (0, 0), colspan=2, rowspan=2, fig=fig)
-    ax.set_axis_off()
-    plt.subplots_adjust(wspace=0.12, hspace=0.12)
-    return fig, axes
-
-
-def make_cosebis_bmode_plot(nmodes):
-    """
-
-    Args:
-        nmodes (int):   number of cosebis modes
-    """
-    nzs = 4
-    axes = {}
-    fig = plt.figure(figsize=(8, 8))
-
-    label2 = r"$B_n [\times 10^{10}]$"
-
-    for i in range(nzs):
-        for j in range(i, nzs):
-            # -----bmode
-            ax = plt.subplot2grid((8, 8), (i * 2, j * 2), colspan=2, rowspan=2, fig=fig)
-            ax.yaxis.set_label_position("right")
-            ax.yaxis.tick_right()
-            ax.set_title(
-                r"$%d \times %d$" % (i + 1, j + 1), fontsize=15, y=1.0, pad=-15, x=0.8
-            )
-            ax.grid()
-
-            # x-axis
-            ax.set_xlim(0.2, nmodes + 0.8)
-            rr = np.arange(1, nmodes + 0.8, 1)
-            if i != j:
-                ax.set_xticks(rr)
-                ax.set_xticklabels([""] * len(rr))
-            else:
-                ax.set_xticks(rr)
-
-            # y-axis
-            ax.set_ylim(-4.5, 4.5)
-            rr = np.arange(-4, 4.5, 2)
-            if j != nzs - 1:
-                ax.set_yticks(rr)
-                ax.set_yticklabels([""] * len(rr))
-            else:
-                ax.set_yticks(rr)
-            if i == 2 and j == 3:
-                ax.set_ylabel(label2)
-            axes.update({"%d%d_b" % (i + 1, j + 1): ax})
-
-    ax = plt.subplot2grid((8, 8), (3 * 2, 1 * 2), colspan=2, rowspan=2, fig=fig)
-    ax.set_axis_off()
-    ll2 = mlines.Line2D(
-        [], [], color=colors[0], marker=".", label=r"COSEBIS: $B$-mode", lw=0
-    )
-    ax.legend(handles=[ll2], loc="lower right", fontsize=20, markerscale=2.0)
-
-    plt.subplots_adjust(wspace=0.12, hspace=0.12)
-    return fig, axes
-
-
 def make_tpcf_plot(
     title="xi", nzs=4, superscript1=None, superscript2=None, small_range=False
 ):
@@ -655,6 +505,7 @@ def plot_chain_corner(
     line_styles=None,
     ax=None,
     contour_labels=None,
+    plot_contour=True,
     plot_hists=True,
     correct_boundary=True,
     correct_multbias=True,
@@ -662,20 +513,21 @@ def plot_chain_corner(
     """Makes the corner plots for posteriors
 
     Args:
-        clist (list):       a list of MC chain with nested sampling
-        cnlist (list):      a list of chain names
-        blind_by (str):     whether to blind_by the reaults
-        nlist (list):       a list of parameters
-        truth (list):       a list of truth parameters
-        kde (float):        kernal density esitamte
-        shade (bool):       whether shade or not
-        color_use (list):   colors for contours
-        line_width (float): line width
-        contour_labels (float):
-                            contour label, "sigma" or "confidence"
-        plot_hists (bool):  whether ploting 1D histogram
+    clist (list):  a list of MC chain with nested sampling
+    cnlist (list):  a list of chain names
+    blind_by (str): whether to blind_by the reaults
+    nlist (list):  a list of parameters
+    truth (list):  a list of truth parameters
+    kde (float):  kernal density esitamte
+    shade (bool):  whether shade or not
+    color_use (list):  colors for contours
+    line_width (float):  line width
+    contour_labels (float): contour label, "sigma" or "confidence"
+    plot_contour (bbool):  whether ploting the contours
+    plot_hists (bool):  whether ploting 1D histogram
+
     Returns:
-        fig (figure):       figure
+    fig (figure):       figure
     """
     if scale <= 1.1:
         sigmas = [0.0, 0.3, 0.5]
@@ -840,17 +692,24 @@ def plot_chain_corner(
     lnlist = [latexDict[nn] for nn in nlist]
     idx = np.sort(np.unique(lnlist, return_index=True)[1])
     nlist2 = [nlist[ii] for ii in idx]
-    if ax is None:
+    if plot_contour:
+        if ax is None:
+            exts = get_summary_extents(stat, nlist2, clist, scale=scale, blind_shift=avel)
+            fig = c.plotter.plot(figsize=2.0, extents=exts, truth=truth)
+            fig.subplots_adjust(bottom=bb, left=tt)
+            c.plotter.restore_rc_params()
+            return fig
+        else:
+            assert len(nlist) == 2
+            c.plotter.plot_contour(ax, latexDict[nlist[0]], latexDict[nlist[1]])
+            c.plotter.restore_rc_params()
+            return
+    else:
         exts = get_summary_extents(stat, nlist2, clist, scale=scale, blind_shift=avel)
-        fig = c.plotter.plot_distributions(figsize=2.0, extents=exts, truth=truth)
+        fig = c.plotter.plot(figsize=2.0, extents=exts, truth=truth)
         fig.subplots_adjust(bottom=bb, left=tt)
         c.plotter.restore_rc_params()
         return fig
-    else:
-        assert len(nlist) == 2
-        c.plotter.plot_contour(ax, latexDict[nlist[0]], latexDict[nlist[1]])
-        c.plotter.restore_rc_params()
-        return
 
 
 def get_summary_extents(stat, pnlist, clist, scale=1.0, blind_shift=None):
@@ -935,13 +794,14 @@ def plot_chain_summary(
     """Plots the summary for a list of chains
 
     Args:
-        clist (list):       chain list [a list of ndarray]
-        cnlist (list):      chain name list [a list of str]
-        blind_by (str):     whether to blind_by the reaults
-        pnlist (list):      parameter name list
-        kde (float):        kernal density esitamte
+    clist (list):       chain list [a list of ndarray]
+    cnlist (list):      chain name list [a list of str]
+    blind_by (str):     whether to blind_by the reaults
+    pnlist (list):      parameter name list
+    kde (float):        kernal density esitamte
+
     Return:
-        fig (figure):       mpl figure
+    fig (figure):       mpl figure
     """
     fmt = "o"
     alpha = 1.0
@@ -1050,10 +910,11 @@ def plot_pvalue_list(plist, nlist):
     """Makes plots of p values with different chains
 
     Args:
-        plist (list):   a list of p-values
-        nlist (list):   a list of chain names
+    plist (list):   a list of p-values
+    nlist (list):   a list of chain names
+
     Return
-        fig (Figure):   matplotlib figure
+    fig (Figure):   matplotlib figure
     """
     if not isinstance(plist, list):
         raise TypeError("plist should be a list")
@@ -1081,11 +942,11 @@ def plot_xipm_data(fname, axes, marker="x", color=colors0[0], nzs=4, extnms=None
     """Makes corner plots for xip and xim from cosmosis data file [fits]
 
     Args:
-        fname (str):    a fits file name
-        axes (dict):    a dictionary of axis generated by `make_tpcf_plot`
-        marker (str):   marker in plot
-        color (str):    color of marker and error bar
-        nzs (int):      number of redshift bins
+    fname (str):    a fits file name
+    axes (dict):    a dictionary of axis generated by `make_tpcf_plot`
+    marker (str):   marker in plot
+    color (str):    color of marker and error bar
+    nzs (int):      number of redshift bins
     """
     hdul = pyfits.open(fname)
     if extnms is None:
@@ -1151,11 +1012,11 @@ def plot_xipm_error(fname, axes, marker="x", color=colors0[0], nzs=4, extnms=Non
     """Makes corner plots for xip and xim from cosmosis data file [fits]
 
     Args:
-        fname (str):    a fits file name
-        axes (dict):    a dictionary of axis generated by `make_tpcf_plot`
-        marker (str):   marker in plot
-        color (str):    color of marker and error bar
-        nzs (int):      number of redshift bins
+    fname (str):    a fits file name
+    axes (dict):    a dictionary of axis generated by `make_tpcf_plot`
+    marker (str):   marker in plot
+    color (str):    color of marker and error bar
+    nzs (int):      number of redshift bins
     """
     hdul = pyfits.open(fname)
     if extnms is None:
@@ -1228,13 +1089,13 @@ def plot_xipm_model(
     prediction]
 
     Args:
-        Dir (str):      output directory name of cosmosis test
-        axes (dict):    a dictionary of axis generated by `make_tpcf_plot`
-        ls (str):       line style in plot
-        color (str):    color of marker and error bar
-        nzs (int):      number of redshift bins
-        blind (bool):   whether do blinding
-        Dir2 (str):     output directory name of cosmosis test [be subtracted]
+    Dir (str):      output directory name of cosmosis test
+    axes (dict):    a dictionary of axis generated by `make_tpcf_plot`
+    ls (str):       line style in plot
+    color (str):    color of marker and error bar
+    nzs (int):      number of redshift bins
+    blind (bool):   whether do blinding
+    Dir2 (str):     output directory name of cosmosis test [be subtracted]
     """
     infname = os.path.join(Dir, "shear_xi_plus/theta.txt")
     thetaP = np.loadtxt(infname) / np.pi * 180.0 * 60.0
@@ -1319,12 +1180,12 @@ def plot_xipm_data_model_ratio(
     prediction]
 
     Args:
-        Dir (str):      output directory name of cosmosis test
-        axes (dict):    a dictionary of axis generated by `make_tpcf_plot`
-        ls (str):       line style in plot
-        color (str):    color of marker and error bar
-        nzs (int):      number of redshift bins
-        blind (bool):   whether do blinding
+    Dir (str):      output directory name of cosmosis test
+    axes (dict):    a dictionary of axis generated by `make_tpcf_plot`
+    ls (str):       line style in plot
+    color (str):    color of marker and error bar
+    nzs (int):      number of redshift bins
+    blind (bool):   whether do blinding
     """
 
     # read data
@@ -1425,12 +1286,13 @@ def nestcheck_plot(infname, n_simulate=100, blind=False, s8_only=False):
     """Plots nestcheck
 
     Args:
-        infname (str):      input file name
-        n_simulate (int):   number of simulations
-        blind (bool):       whether blind values
-        s8_only (bool):     whether only plot s8
+    infname (str):      input file name
+    n_simulate (int):   number of simulations
+    blind (bool):       whether blind values
+    s8_only (bool):     whether only plot s8
+
     Returns:
-        fig (figure):       matplotlib figure
+    fig (figure):       matplotlib figure
     """
     output_info = TextColumnOutput.load_from_options({"filename": infname})
     colnames, data, metadata, _, final_meta = output_info
