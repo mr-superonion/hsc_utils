@@ -782,12 +782,13 @@ def get_shear_regauss_mock(datIn, mbias, msel=0.0, version="all"):
     Note: shape weight should be added when caluculating ensemble average.
 
     Args:
-        datIn (ndarray):    input mock catalog
-        mbias (float):      average multiplicative bias [m+dm2]
-        msel (float):       selection multiplicative bias for the sample
-        Returns:
-        g1 (ndarray):       the first component of shear
-        g2 (ndarray):       the second component of shear
+    datIn (ndarray):    input mock catalog
+    mbias (float):      average multiplicative bias [m+dm2]
+    msel (float):       selection multiplicative bias for the sample
+
+    Returns:
+    g1 (ndarray):       the first component of shear
+    g2 (ndarray):       the second component of shear
     """
     if version == "all":
         erms = (datIn["noise1_int"] ** 2.0 + datIn["noise2_int"] ** 2.0) / 2.0
@@ -821,27 +822,31 @@ def get_shear_regauss_mock(datIn, mbias, msel=0.0, version="all"):
     return g1, g2
 
 
-def make_mock_catalog(datIn, mbias, msel=0.0, corr=1.0):
+def make_mock_catalog(data_mock, mbias=0.0, msel=0.0, corr=1.0):
     """Rescales the shear by (1 + mbias) following section 5.6 and calculate
     the mock ellipticities according to eq. (24) and (25) of
     https://arxiv.org/pdf/1901.09488.pdf
 
     Args:
-        datIn (ndaray): Original HSC S19A mock catalog (it should haave m=0)
-        mbias (float):  The multiplicative bias
-        msel (float):   Selection bias [default=0.]
-        corr (float):   Correction term for shell thickness, finite resolution and missmatch
-                        between n(z_data) and n(z_mock) due to a limited number source planes
+    data_mock (ndaray):  Original HSC S19A mock catalog (it should haave m=0)
+    mbias (float):  The multiplicative bias
+    msel (float):   Selection bias [default=0.]
+    corr (float):   Correction term for shell thickness, finite resolution and
+                    missmatch between n(z_data) and n(z_mock) due to a limited
+                    number source planes
+
     Returns:
-        out (ndarray):  Updated S19A mock catalog (with m=mbias)
+    out (ndarray):  Updated S19A mock catalog (with m=mbias)
     """
     if not isinstance(mbias, (float, int)):
         raise TypeError("multiplicative shear estimation bias should be a float.")
     if not isinstance(msel, (float, int)):
         raise TypeError("multiplicative selection bias should be a float.")
+    if not isinstance(corr, (float, int)):
+        raise TypeError("multiplicative selection bias should be a float.")
 
     bratio = (1 + mbias) * (1 + msel) * corr
-    out = datIn.copy()
+    out = data_mock.copy()
     # Rescaled gamma by (1+m) and then calculate the distortion delta
     gamma_sq = (out["shear1_sim"] ** 2.0 + out["shear2_sim"] ** 2.0) * bratio**2.0
     dis1 = (
@@ -884,6 +889,134 @@ def make_mock_catalog(datIn, mbias, msel=0.0, corr=1.0):
     out["e1_mock"] = e1_mock / (1.0 + de) + out["noise1_mea"]
     out["e2_mock"] = e2_mock / (1.0 + de) + out["noise2_mea"]
     return out
+
+def generate_mock_shape_from_sim(
+        gamma1_sim,
+        gamma2_sim,
+        kappa_sim,
+        shape1_int,
+        shape2_int,
+        shape1_meas,
+        shape2_meas,
+        mbias=0.0,
+        msel=0.0,
+        corr=1.0,
+    ):
+    """Rescales the shear by (1 + mbias) following section 5.6 and calculate
+    the mock ellipticities according to eq. (24) and (25) of
+    https://arxiv.org/pdf/1901.09488.pdf
+
+    Args:
+    gamma1_sim (ndaray):    first component of shear from simulation
+    gamma1_sim (ndaray):    second component of shear from simulation
+    kappa_sim (ndaray):     kappa from simulation
+    shape1_int (ndarray):   first component of intrinsic shape noise
+    shape2_int (ndarray):   second component of intrinsic shape noise
+    shape1_meas (ndarray):  first component of measurement error
+    shape2_meas (ndarray):  second component of measurement error
+    mbias (float):          The multiplicative bias
+    msel (float):           Selection bias [default=0.]
+    corr (float):           Correction term for biases in gamma_sim shell
+                            thickness, finite resolution and missmatch between
+                            n(z_data) and n(z_mock) due to a limited number
+                            source planes
+
+    Returns:
+    e1_mock, e2_mock (ndarray):  mock ellipticity (with m=mbias)
+    """
+    if not isinstance(mbias, (float, int)):
+        raise TypeError("multiplicative shear estimation bias should be a float.")
+    if not isinstance(msel, (float, int)):
+        raise TypeError("multiplicative selection bias should be a float.")
+    if not isinstance(corr, (float, int)):
+        raise TypeError("correction should be a float.")
+
+    bratio = (1 + mbias) * (1 + msel) * corr
+    # Rescaling gamma by (1+m) and then calculate the distortion delta
+    gamma_sq = (gamma1_sim ** 2.0 + gamma2_sim ** 2.0) * bratio**2.0
+    dis1 = (
+        2.0
+        * (1 - kappa_sim)
+        * gamma1_sim
+        * bratio
+        / ((1 - kappa_sim) ** 2 + gamma_sq)
+    )
+    dis2 = (
+        2.0
+        * (1 - kappa_sim)
+        * gamma2_sim
+        * bratio
+        / ((1 - kappa_sim) ** 2 + gamma_sq)
+    )
+    # Calculate the mock ellitpicities
+    de = dis1 * shape1_int + dis2 * shape2_int  # for denominators
+    dd = dis1**2 + dis2**2.0
+    # avoid dividing by zero (this term is 0 under the limit dd->0)
+    tmp1 = np.divide(dis1, dd, out=np.zeros_like(dd), where=dd != 0)
+    tmp2 = np.divide(dis2, dd, out=np.zeros_like(dd), where=dd != 0)
+    # the nominator for e1
+    e1_mock = (
+        shape1_int
+        + dis1
+        + tmp2
+        * (1 - (1 - dd) ** 0.5)
+        * (dis1 * shape2_int - dis2 * shape1_int)
+    )
+    # the nominator for e2
+    e2_mock = (
+        shape2_int
+        + dis2
+        + tmp1
+        * (1 - (1 - dd) ** 0.5)
+        * (dis2 * shape1_int - dis1 * shape2_int)
+    )
+    # update e1_mock and e2_mock
+    e1_mock = e1_mock / (1.0 + de) + shape1_meas
+    e2_mock = e2_mock / (1.0 + de) + shape2_meas
+    return e1_mock, e2_mock
+
+
+def simulate_shape_noise(
+        e1,
+        e2,
+        e_rms,
+        sigma_e,
+        seed=None,
+    ):
+    """Simulate shape noise including intrinsic shape dispersion and
+    measurement error
+
+    Args:
+    e1, e2 (ndarray):   reGauss ellipticity
+    sigma_e (ndarray):  measurement error calibrated with image simulation
+    e_rms (ndarray):    intrinsic shape dispersion calibrated with simulation
+    seed (int):         random seed
+
+    Returns:
+    shape1_int (ndarray):   first component of intrinsic shape noise
+    shape2_int (ndarray):   second component of intrinsic shape noise
+    shape1_meas (ndarray):  first component of measurement error
+    shape2_meas (ndarray):  second component of measurement error
+    """
+    if seed is not None:
+        np.random.seed(seed)
+    ngal = len(e1)
+
+    # Rotation angle
+    phi = 2.0 * np.pi * np.random.rand(ngal)
+    cs = np.cos(phi); ss = np.sin(phi)
+
+    # Rotate the ellipticity and get the intrinsic shape
+    f = np.sqrt(
+        e_rms * e_rms / ( e_rms * e_rms + sigma_e * sigma_e )
+    )
+    shape1_int = (e1 * cs + e2 * ss) * f
+    shape2_int = (-1.0 * e1 * ss + e2 * cs) * f
+
+    # measurement error from image noise
+    shape1_meas =  np.random.randn(ngal) * sigma_e
+    shape2_meas =  np.random.randn(ngal) * sigma_e
+    return shape1_int, shape2_int, shape1_meas, shape2_meas
 
 
 def get_TPid(catalog):
